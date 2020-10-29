@@ -1,0 +1,43 @@
+name: update_pkInfo json
+
+on: 
+  workflow_dispatch:
+  watch:
+      types: [started]
+  #repository_dispatch:
+   # types: update_pkInfo
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    if: github.event.repository.owner.id == github.event.sender.id
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+        
+    - name: 'Set up Python'
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.7
+         
+    - name: 'Install requirements'
+      run: pip3 install -r ./requirements.txt 
+        
+    - name: 'update_pkInfo'
+      run: python3 update_pkInfo.py
+      env:
+          JD_COOKIE: ${{ secrets.JD_COOKIE }}
+
+    - name: commit
+      run: |
+        git config --global user.email ${{ secrets.email }}
+        git config --global user.name Zero-S1
+        git add .
+        git commit -m "update by Github Action" -a || echo "Nothing to update"
+      
+    - name: Push changes
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        branch: main
